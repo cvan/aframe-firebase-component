@@ -17,54 +17,92 @@ AFRAME.registerSystem('firebase', {
     this.database = firebase.database();
 
     this.broadcastingEntities = {};
-    this.syncedEntities = {};
+    this.entities = {};
+    this.broadcastHandlers = [];
 
-    firebase.database().ref('entities').on('value', function (snapshot) {
-      self.syncEntities(snapshot.val());
+    firebase.database().ref('entities').once('value', function (snapshot) {
+      self.handleInitialSync(snapshot.val());
+    });
+
+    firebase.database().ref('entities').on('child_added', function (data) {
+      self.handleEntityAdded(data.key, data.val());
+    });
+
+    firebase.database().ref('entities').on('child_changed', function (data) {
+      self.handleEntityChanged(data.key, data.val());
+    });
+
+    firebase.database().ref('entities').on('child_removed', function (data) {
+      self.handleEntityRemoved(data.key);
+    });
+
+    window.addEventListener('beforeunload', function () {
+      self.handleExit();
     });
   },
 
   /**
-   * Read data.
+   * Initial sync.
    */
-  syncEntities: function (entities) {
-    var broadcastingEntities = this.broadcastingEntities;
-    var sceneEl = this.sceneEl;
-    var syncedEntities = this.syncedEntities;
+  handleInitialSync: function (data) {
+    var self = this;
+    Object.keys(data).forEach(function (entityId) {
+      self.handleEntityAdded(entityId, data[entityId]);
+    });
+  },
 
-    Object.keys(entities).forEach(function (id) {
-      // Don't sync if already broadcasting to self-updating loops.
-      if (broadcastingEntities[id]) { return; }
+  /**
+   * Entity added.
+   */
+  handleEntityAdded: function (id, components) {
+    var entity = document.createElement('a-entity');
+    this.entities[id] = entity;
+    Object.keys(components).forEach(function setComponent (componentName) {
+      entity.setAttribute(componentName, components[componentName]);
+    });
+    this.sceneEl.appendChild(entity);
+  },
 
-      // Update entity.
-      if (syncedEntities[id]) {
-        Object.keys(entities[id]).forEach(function (componentName) {
-          syncedEntities[id].setAttribute(componentName, entities[id][componentName]);
-        });
-        return;
-      }
+  /**
+   * Entity updated.
+   */
+  handleEntityChanged: function (id, components) {
+    // Don't sync if already broadcasting to self-updating loops.
+    if (this.broadcastingEntities[id]) { return; }
 
-      // Create entity if it doesn't exist.
-      var entity = document.createElement('a-entity');
-      Object.keys(entities[id]).forEach(function (componentName) {
-        entity.setAttribute(componentName, entities[id][componentName]);
-      });
-      sceneEl.appendChild(entity);
-      syncedEntities[id] = entity;
+    var entity = this.entities[id];
+    Object.keys(components).forEach(function setComponent (componentName) {
+      entity.setAttribute(componentName, components[componentName]);
+    });
+  },
+
+  /**
+   * Entity removed. Detach.
+   */
+  handleEntityRemoved: function (id) {
+    var entity = this.entities[id];
+    entity.parentNode.removeChild(entity);
+    delete this.entities[id];
+  },
+
+  /**
+   * Delete all broadcasting entities.
+   */
+  handleExit: function () {
+    Object.keys(this.broadcastingEntities).forEach(function (id) {
+      firebase.database().ref('entities/' + id).remove();
     });
   },
 
   /**
    * Send data.
    */
-  registerBroadcast: function (el, components) {
-    var self = this;
+  registerBroadcast: function (el, components, interval) {
+    var broadcastingEntities = this.broadcastingEntities;
     var database = this.database;
+    var handler = {interval: interval};
 
-    el.addEventListener('componentchanged', function broadcast (evt) {
-      // Only broadcast selected components.
-      if (components.indexOf(evt.detail.name) === -1) { return; }
-
+    handler.handler = function send () {
       // Build data.
       var data = {};
       components.forEach(function getData (componentName) {
@@ -72,15 +110,23 @@ AFRAME.registerSystem('firebase', {
       });
 
       // Initialize entry.
-      var entityKey = el.getAttribute('firebase-broadcast').id;
-      if (!entityKey) {
-        entityKey = firebase.database().ref().child('entities').push().key;
-        el.setAttribute('firebase-broadcast', 'id', entityKey);
-        self.broadcastingEntities[entityKey] = el;
+      if (!handler.entityKey) {
+        handler.entityKey = firebase.database().ref().child('entities').push().key;
+        broadcastingEntities[handler.entityKey] = el;
       }
 
       // Update entry.
-      firebase.database().ref('entities/' + entityKey).update(data);
+      firebase.database().ref('entities/' + handler.entityKey).update(data);
+    };
+    this.broadcastHandlers.push(handler);
+  },
+
+  tick: function (time) {
+    if (time - this.time < 20) { return; }
+    this.time = time;
+
+    this.broadcastHandlers.forEach(function runHandler (handler) {
+      handler.handler();
     });
   }
 });
