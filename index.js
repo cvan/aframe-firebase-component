@@ -53,13 +53,21 @@ AFRAME.registerSystem('firebase', {
   /**
    * Entity added.
    */
-  handleEntityAdded: function (id, components) {
+  handleEntityAdded: function (id, data) {
     var entity = document.createElement('a-entity');
     this.entities[id] = entity;
-    Object.keys(components).forEach(function setComponent (componentName) {
-      entity.setAttribute(componentName, components[componentName]);
+
+    // Parent node.
+    var parentId = data.parentId;
+    var parentEl = this.entities[parentId] || this.sceneEl;
+    delete data.parentId;
+
+    // Components.
+    Object.keys(data).forEach(function setComponent (componentName) {
+      entity.setAttribute(componentName, data[componentName]);
     });
-    this.sceneEl.appendChild(entity);
+
+    parentEl.appendChild(entity);
   },
 
   /**
@@ -103,6 +111,7 @@ AFRAME.registerSystem('firebase', {
     var database = this.database;
     // Initialize entry.
     var id = database.ref().child('entities').push().key;
+    el.setAttribute('firebase-broadcast', 'id', id);
     broadcastingEntities[id] = el;
   },
 
@@ -112,6 +121,7 @@ AFRAME.registerSystem('firebase', {
   tick: function (time) {
     var broadcastingEntities = this.broadcastingEntities;
     var database = this.database;
+    var sceneEl = this.sceneEl;
 
     if (time - this.time < 20) { return; }
     this.time = time;
@@ -119,9 +129,16 @@ AFRAME.registerSystem('firebase', {
     Object.keys(broadcastingEntities).forEach(function broadcast (id) {
       var el = broadcastingEntities[id];
       var components = el.getAttribute('firebase-broadcast').components;
+      var data = {};
+
+      // Parent.
+      if (el.parentNode !== sceneEl) {
+        var broadcastData = el.parentNode.getAttribute('firebase-broadcast');
+        if (!broadcastData) { return; }  // Wait for parent to initialize.
+        data.parentId = broadcastData.id;
+      }
 
       // Build data.
-      var data = {};
       components.forEach(function getData (componentName) {
         data[componentName] = el.getComputedAttribute(componentName);
       });
