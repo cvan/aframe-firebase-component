@@ -18,7 +18,6 @@ AFRAME.registerSystem('firebase', {
 
     this.broadcastingEntities = {};
     this.entities = {};
-    this.broadcastHandlers = [];
 
     firebase.database().ref('entities').once('value', function (snapshot) {
       self.handleInitialSync(snapshot.val());
@@ -89,44 +88,46 @@ AFRAME.registerSystem('firebase', {
    * Delete all broadcasting entities.
    */
   handleExit: function () {
+    var self = this;
     Object.keys(this.broadcastingEntities).forEach(function (id) {
+      delete self.broadcastingEntities[id];
       firebase.database().ref('entities/' + id).remove();
     });
   },
 
   /**
-   * Send data.
+   * Register.
    */
   registerBroadcast: function (el, components, interval) {
     var broadcastingEntities = this.broadcastingEntities;
     var database = this.database;
-    var handler = {interval: interval};
+    // Initialize entry.
+    var id = database.ref().child('entities').push().key;
+    broadcastingEntities[id] = el;
+  },
 
-    handler.handler = function send () {
+  /**
+   * Broadcast.
+   */
+  tick: function (time) {
+    var broadcastingEntities = this.broadcastingEntities;
+    var database = this.database;
+
+    if (time - this.time < 20) { return; }
+    this.time = time;
+
+    Object.keys(broadcastingEntities).forEach(function broadcast (id) {
+      var el = broadcastingEntities[id];
+      var components = el.getAttribute('firebase-broadcast').components;
+
       // Build data.
       var data = {};
       components.forEach(function getData (componentName) {
         data[componentName] = el.getComputedAttribute(componentName);
       });
 
-      // Initialize entry.
-      if (!handler.entityKey) {
-        handler.entityKey = firebase.database().ref().child('entities').push().key;
-        broadcastingEntities[handler.entityKey] = el;
-      }
-
       // Update entry.
-      firebase.database().ref('entities/' + handler.entityKey).update(data);
-    };
-    this.broadcastHandlers.push(handler);
-  },
-
-  tick: function (time) {
-    if (time - this.time < 20) { return; }
-    this.time = time;
-
-    this.broadcastHandlers.forEach(function runHandler (handler) {
-      handler.handler();
+      database.ref('entities/' + id).update(data);
     });
   }
 });
