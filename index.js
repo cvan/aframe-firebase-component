@@ -11,9 +11,39 @@ AFRAME.registerSystem('firebase', {
   init: function () {
     var sceneEl = this.sceneEl;
     var config = sceneEl.getAttribute('firebase');
+    var self = this;
+
     this.firebase = firebase.initializeApp(config);
     this.database = firebase.database();
     this.broadcastHandlers = [];
+    this.syncedEntities = {};
+
+    firebase.database().ref('entities').on('value', function (snapshot) {
+      self.syncEntities(snapshot.val());
+    });
+  },
+
+  syncEntities: function (entities) {
+    var sceneEl = this.sceneEl;
+    var syncedEntities = this.syncedEntities;
+
+    Object.keys(entities).forEach(function (id) {
+      // Create entity if it doesn't exist.
+      if (!syncedEntities[id]) {
+        var entity = document.createElement('a-entity');
+        entity.setAttribute('id', id);
+        Object.keys(entities[id]).forEach(function (componentName) {
+          entity.setAttribute(componentName, entities[id][componentName]);
+        });
+        sceneEl.appendChild(entity);
+        syncedEntities[id] = entity;
+        return;
+      }
+      // Update entity.
+      Object.keys(entities[id]).forEach(function (componentName) {
+        syncedEntities[id].setAttribute(componentName, entities[id][componentName]);
+      });
+    });
   },
 
   /**
@@ -21,20 +51,16 @@ AFRAME.registerSystem('firebase', {
    */
   registerBroadcast: function (el, components, interval) {
     var database = this.database;
-    var handler = {
-      interval: interval,
-      pushed: false
-    };
+    var handler = {interval: interval};
     handler.handler = function send () {
       // Build data.
       var data = {};
-      Object.keys(components).forEach(function getData (componentName) {
+      components.forEach(function getData (componentName) {
         data[componentName] = el.getComputedAttribute(componentName);
       });
       // Initialize entry.
-      if (!handler.pushed) {
+      if (!handler.entityKey) {
         handler.entityKey = firebase.database().ref().child('entities').push().key;
-        handler.pushed = true;
       }
       // Update entry.
       firebase.database().ref('entities/' + handler.entityKey).update(data);
@@ -43,7 +69,7 @@ AFRAME.registerSystem('firebase', {
   },
 
   tick: function (time) {
-    if (time - this.time < 50) { return; }
+    if (time - this.time < 200) { return; }
     this.time = time;
 
     this.broadcastHandlers.forEach(function runHandler (handler) {
