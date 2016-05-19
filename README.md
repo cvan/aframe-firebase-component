@@ -5,11 +5,15 @@
 A Firebase component for [A-Frame](https://aframe.io).
 
 Comes with a Firebase broadcast component for multiuser experiences
-out-of-the-box by syncing entities' component data to Firebase realtime database.
+out-of-the-box by syncing entities' component data to Firebase realtime
+database. The parent-child relationships between entities are maintained as
+well as long as all entities in the hierarchy have the `broadcast` component
+attached.
 
 To deploy when setting up Firebase in the Console, go into *Auth*, and add your
-GitHub pages domain (e.g., `ngokevin.github.io`). If you scene allows any user, then
-go into *Database*, click on *Rules*, and set both the `.read` and `.write` to `true`.
+GitHub pages domain (e.g., `ngokevin.github.io`). If you scene allows any user,
+then go into *Database*, click on *Rules*, and set both the `.read` and
+`.write` to `true`.
 
 ### Properties
 
@@ -60,11 +64,16 @@ Install and use by directly including the [browser files](dist):
                      authDomain: mysite.firebaseapp.com;
                      databaseURL: https://mysite.firebaseio.com;
                      storageBucket: mysite.appspot.com">
-    <a-entity id="avatar"
-              camera look-controls wasd-controls
-              firebase-broadcast="components: geometry, material, position, rotation"
+    <a-assets>
+      <!-- Using mixins to decrease amount of data send over the wire. -->
+      <a-mixin id="avatar-head"
               geometry="primitive: box; depth: 0.3; height: 0.3; width: 0.3"
-              material="color: #222"
+              material="color: #222"></a-mixin>
+    </a-assets>
+
+    <a-entity id="avatar" mixin="avatar-head"
+              camera look-controls wasd-controls
+              firebase-broadcast="components: mixin, position, rotation"
               position="0 1.8 5">
     </a-entity>
   </a-scene>
