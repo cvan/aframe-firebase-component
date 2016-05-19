@@ -15,6 +15,8 @@ AFRAME.registerSystem('firebase', {
 
     this.firebase = firebase.initializeApp(config);
     this.database = firebase.database();
+
+    this.broadcastingEntities = {};
     this.syncedEntities = {};
 
     firebase.database().ref('entities').on('value', function (snapshot) {
@@ -26,10 +28,14 @@ AFRAME.registerSystem('firebase', {
    * Read data.
    */
   syncEntities: function (entities) {
+    var broadcastingEntities = this.broadcastingEntities;
     var sceneEl = this.sceneEl;
     var syncedEntities = this.syncedEntities;
 
     Object.keys(entities).forEach(function (id) {
+      // Don't sync if already broadcasting to self-updating loops.
+      if (broadcastingEntities[id]) { return; }
+
       // Update entity.
       if (syncedEntities[id]) {
         Object.keys(entities[id]).forEach(function (componentName) {
@@ -52,6 +58,7 @@ AFRAME.registerSystem('firebase', {
    * Send data.
    */
   registerBroadcast: function (el, components) {
+    var self = this;
     var database = this.database;
 
     el.addEventListener('componentchanged', function broadcast (evt) {
@@ -69,6 +76,7 @@ AFRAME.registerSystem('firebase', {
       if (!entityKey) {
         entityKey = firebase.database().ref().child('entities').push().key;
         el.setAttribute('firebase-broadcast', 'id', entityKey);
+        self.broadcastingEntities[entityKey] = el;
       }
 
       // Update entry.
