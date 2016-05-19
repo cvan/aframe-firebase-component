@@ -123,7 +123,7 @@ AFRAME.registerSystem('firebase', {
     var database = this.database;
     var sceneEl = this.sceneEl;
 
-    if (time - this.time < 20) { return; }
+    if (time - this.time < 10) { return; }
     this.time = time;
 
     Object.keys(broadcastingEntities).forEach(function broadcast (id) {
