@@ -15,7 +15,6 @@ AFRAME.registerSystem('firebase', {
 
     this.firebase = firebase.initializeApp(config);
     this.database = firebase.database();
-    this.broadcastHandlers = [];
     this.syncedEntities = {};
 
     firebase.database().ref('entities').on('value', function (snapshot) {
@@ -23,57 +22,57 @@ AFRAME.registerSystem('firebase', {
     });
   },
 
+  /**
+   * Read data.
+   */
   syncEntities: function (entities) {
     var sceneEl = this.sceneEl;
     var syncedEntities = this.syncedEntities;
 
     Object.keys(entities).forEach(function (id) {
-      // Create entity if it doesn't exist.
-      if (!syncedEntities[id]) {
-        var entity = document.createElement('a-entity');
-        entity.setAttribute('id', id);
+      // Update entity.
+      if (syncedEntities[id]) {
         Object.keys(entities[id]).forEach(function (componentName) {
-          entity.setAttribute(componentName, entities[id][componentName]);
+          syncedEntities[id].setAttribute(componentName, entities[id][componentName]);
         });
-        sceneEl.appendChild(entity);
-        syncedEntities[id] = entity;
         return;
       }
-      // Update entity.
+
+      // Create entity if it doesn't exist.
+      var entity = document.createElement('a-entity');
       Object.keys(entities[id]).forEach(function (componentName) {
-        syncedEntities[id].setAttribute(componentName, entities[id][componentName]);
+        entity.setAttribute(componentName, entities[id][componentName]);
       });
+      sceneEl.appendChild(entity);
+      syncedEntities[id] = entity;
     });
   },
 
   /**
-   * Register broadcast to send entity component data to Firebase database on interval.
+   * Send data.
    */
-  registerBroadcast: function (el, components, interval) {
+  registerBroadcast: function (el, components) {
     var database = this.database;
-    var handler = {interval: interval};
-    handler.handler = function send () {
+
+    el.addEventListener('componentchanged', function broadcast (evt) {
+      // Only broadcast selected components.
+      if (components.indexOf(evt.detail.name) === -1) { return; }
+
       // Build data.
       var data = {};
       components.forEach(function getData (componentName) {
         data[componentName] = el.getComputedAttribute(componentName);
       });
+
       // Initialize entry.
-      if (!handler.entityKey) {
-        handler.entityKey = firebase.database().ref().child('entities').push().key;
+      var entityKey = el.getAttribute('firebase-broadcast').id;
+      if (!entityKey) {
+        entityKey = firebase.database().ref().child('entities').push().key;
+        el.setAttribute('firebase-broadcast', 'id', entityKey);
       }
+
       // Update entry.
-      firebase.database().ref('entities/' + handler.entityKey).update(data);
-    };
-    this.broadcastHandlers.push(handler);
-  },
-
-  tick: function (time) {
-    if (time - this.time < 200) { return; }
-    this.time = time;
-
-    this.broadcastHandlers.forEach(function runHandler (handler) {
-      handler.handler();
+      firebase.database().ref('entities/' + entityKey).update(data);
     });
   }
 });
@@ -95,23 +94,13 @@ AFRAME.registerComponent('firebase', {
  */
 AFRAME.registerComponent('firebase-broadcast', {
   schema: {
-    interval: {default: 10},
+    id: {default: ''},
     components: {default: ['position', 'rotation']}
   },
 
   init: function () {
-    var data = this.data;
     var el = this.el;
     var system = el.sceneEl.systems.firebase;
-    system.registerBroadcast(el, data.components, data.interval);
+    system.registerBroadcast(el, this.data.components);
   }
 });
-
-function guid() {
-  var text = '';
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  for (var i = 0; i < 5; i++) {
-    text += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return text;
-}
