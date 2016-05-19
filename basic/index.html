@@ -3,6 +3,7 @@
     <title>A-Frame Firebase Component - Basic</title>
     <script src="../build.js"></script>
     <script src="components/follow.js"></script>
+    <script src="components/random-position.js"></script>
   </head>
   <body>
     <a-scene firebase="apiKey: AIzaSyCZ3-NR0dDNaVzDgpybULwmJokkPTSmOsQ;
@@ -21,8 +22,8 @@
       <!-- Synced avatar head. Rotates separately from body. -->
       <a-entity id="head" mixin="avatar-head"
                 camera look-controls wasd-controls
-                firebase-broadcast="components: mixin, position, rotation"
-                position="0 1.8 5"></a-entity>
+                random-position="min: -10 1.7 -10; max: 10 1.9 10"
+                firebase-broadcast="components: mixin, position, rotation"></a-entity>
 
       <!-- Synced avatar body. -->
       <a-entity id="body" firebase-broadcast="components: position" follow="[camera]">

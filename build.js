@@ -50,7 +50,9 @@ AFRAME.registerSystem('firebase', {
    */
   handleInitialSync: function (data) {
     var self = this;
+    var broadcastingEntities = this.broadcastingEntities;
     Object.keys(data).forEach(function (entityId) {
+      if (broadcastingEntities[entityId]) { return; }
       self.handleEntityAdded(entityId, data[entityId]);
     });
   },
@@ -59,6 +61,9 @@ AFRAME.registerSystem('firebase', {
    * Entity added.
    */
   handleEntityAdded: function (id, data) {
+    // Already added.
+    if (this.entities[id] || this.broadcastingEntities[id]) { return; }
+
     var entity = document.createElement('a-entity');
     this.entities[id] = entity;
 
