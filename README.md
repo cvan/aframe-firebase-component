@@ -7,6 +7,10 @@ A Firebase component for [A-Frame](https://aframe.io).
 Comes with a Firebase broadcast component for multiuser experiences
 out-of-the-box by syncing entities' component data to Firebase realtime database.
 
+To deploy when setting up Firebase in the Console, go into *Auth*, and add your
+GitHub pages domain (e.g., `ngokevin.github.io`). If you scene allows any user, then
+go into *Database*, click on *Rules*, and set both the `.read` and `.write` to `true`.
+
 ### Properties
 
 #### firebase
