@@ -28,11 +28,21 @@ Firebase configuration component for `<a-scene>`.
 
 Broadcast component data to be synced across all clients using Firebase realtime database.
 
-### Usage
-
 | Property   | Description                                          | Default Value      |
 | --------   | -----------                                          | -------------      |
 | components | List of comma-delimited component names to broadcast | position, rotation |
+
+### Accessing the Firebase Object
+
+You can access the Firebase object:
+
+```js
+document.querySelector('a-scene').systems.firebase.firebase
+```
+
+If you wanted to add game logic or features such as chat.
+
+### Usage
 
 #### Browser Installation
 
