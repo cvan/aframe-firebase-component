@@ -13,6 +13,42 @@ AFRAME.registerSystem('firebase', {
     var config = sceneEl.getAttribute('firebase');
     this.firebase = firebase.initializeApp(config);
     this.database = firebase.database();
+    this.broadcastHandlers = [];
+  },
+
+  /**
+   * Register broadcast to send entity component data to Firebase database on interval.
+   */
+  registerBroadcast: function (el, components, interval) {
+    var database = this.database;
+    var handler = {
+      interval: interval,
+      pushed: false
+    };
+    handler.handler = function send () {
+      // Build data.
+      var data = {};
+      Object.keys(components).forEach(function getData (componentName) {
+        data[componentName] = el.getComputedAttribute(componentName);
+      });
+      // Initialize entry.
+      if (!handler.pushed) {
+        handler.entityKey = firebase.database().ref().child('entities').push().key;
+        handler.pushed = true;
+      }
+      // Update entry.
+      firebase.database().ref('entities/' + handler.entityKey).update(data);
+    };
+    this.broadcastHandlers.push(handler);
+  },
+
+  tick: function (time) {
+    if (time - this.time < 50) { return; }
+    this.time = time;
+
+    this.broadcastHandlers.forEach(function runHandler (handler) {
+      handler.handler();
+    });
   }
 });
 
@@ -34,13 +70,14 @@ AFRAME.registerComponent('firebase', {
 AFRAME.registerComponent('firebase-broadcast', {
   schema: {
     interval: {default: 10},
-    send: {default: ['position', 'rotation']}
+    components: {default: ['position', 'rotation']}
   },
 
   init: function () {
+    var data = this.data;
     var el = this.el;
-    var system = el.systems.firebase;
-    system.registerBroadcast(el, this.data);
+    var system = el.sceneEl.systems.firebase;
+    system.registerBroadcast(el, data.components, data.interval);
   }
 });
 
