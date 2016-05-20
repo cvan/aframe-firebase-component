@@ -43,6 +43,9 @@ AFRAME.registerSystem('firebase', {
     window.addEventListener('beforeunload', function () {
       self.handleExit();
     });
+    window.addEventListener('pagehide', function () {
+      self.handleExit();
+    });
   },
 
   /**
@@ -98,6 +101,7 @@ AFRAME.registerSystem('firebase', {
    */
   handleEntityRemoved: function (id) {
     var entity = this.entities[id];
+    if (!entity) { return; }
     entity.parentNode.removeChild(entity);
     delete this.entities[id];
   },
