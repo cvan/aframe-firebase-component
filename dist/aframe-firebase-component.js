@@ -139,6 +139,7 @@
 	   */
 	  handleEntityRemoved: function (id) {
 	    var entity = this.entities[id];
+	    if (!entity) { return; }
 	    entity.parentNode.removeChild(entity);
 	    delete this.entities[id];
 	  },
