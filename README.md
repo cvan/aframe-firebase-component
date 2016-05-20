@@ -15,7 +15,7 @@ Console](https://firebase.google.com/console/), go into *Auth*, and add your
 GitHub pages domain (e.g., `ngokevin.github.io`). This will whitelist your
 domain.
 
-If your scene allows unauthenticated users (most should), then go into
+If you want to allow unauthenticated users (most should), then go into
 *Database*, click on *Rules*, and set both the `.read` and `.write` to `true`.
 
 ### Properties
