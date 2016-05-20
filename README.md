@@ -22,7 +22,8 @@ If your scene allows unauthenticated users (most should), then go into
 
 #### firebase
 
-Firebase configuration component for `<a-scene>`.
+Firebase configuration component for `<a-scene>`. Firebase will provide all of
+this for you when you set up a Firebase app.
 
 | Property      | Description                     |
 | --------      | -----------                     |
