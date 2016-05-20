@@ -12,7 +12,8 @@ attached.
 
 To deploy with GitHub pages when setting up Firebase with the [Firebase
 Console](https://firebase.google.com/console/), go into *Auth*, and add your
-GitHub pages domain (e.g., `ngokevin.github.io`).
+GitHub pages domain (e.g., `ngokevin.github.io`). This will whitelist your
+domain.
 
 If your scene allows unauthenticated users (most should), then go into
 *Database*, click on *Rules*, and set both the `.read` and `.write` to `true`.
