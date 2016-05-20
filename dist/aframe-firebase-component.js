@@ -84,6 +84,9 @@
 	    window.addEventListener('beforeunload', function () {
 	      self.handleExit();
 	    });
+	    window.addEventListener('pagehide', function () {
+	      self.handleExit();
+	    });
 	  },
 
 	  /**
