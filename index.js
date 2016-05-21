@@ -72,6 +72,7 @@ AFRAME.registerSystem('firebase', {
 
     // Components.
     Object.keys(data).forEach(function setComponent (componentName) {
+      if (componentName === 'parentId') { return; }
       entity.setAttribute(componentName, data[componentName]);
     });
 
@@ -87,6 +88,7 @@ AFRAME.registerSystem('firebase', {
 
     var entity = this.entities[id];
     Object.keys(components).forEach(function setComponent (componentName) {
+      if (componentName === 'parentId') { return; }
       entity.setAttribute(componentName, components[componentName]);
     });
   },
@@ -182,6 +184,8 @@ AFRAME.registerComponent('firebase-broadcast', {
   init: function () {
     var el = this.el;
     var system = el.sceneEl.systems.firebase;
-    system.registerBroadcast(el, this.data.components);
+    if (this.data.components.length) {
+      system.registerBroadcast(el, this.data.components);
+    }
   }
 });

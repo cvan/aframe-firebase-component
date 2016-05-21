@@ -22,7 +22,7 @@
                 material="color: #222"
                 template="src: #avatar-template"></a-mixin>
         <a-mixin id="chair-part" geometry="primitive: box" material="color: brown"></a-mixin>
-        <a-mixin id="arm" geometry="primitive: box; depth: 0.1; height: 0.5; width: 0.1"
+        <a-mixin id="arm" geometry="primitive: box; depth: 0.08; height: 0.5; width: 0.08"
                           material="color: #222; shader: flat"></a-mixin>
         <a-mixin id="eye" geometry="primitive: circle"
                           material="shader: flat; side: double"></a-mixin>
@@ -47,9 +47,9 @@
             </a-entity>
           </a-entity>
           <!-- Arms. -->
-          <a-entity class="arms" firebase-broadcast="components: rotation">
-            <a-entity mixin="arm" position="-0.3 -0.5 0"></a-entity>
-            <a-entity mixin="arm" position="0.3 -0.5 0"></a-entity>
+          <a-entity class="arms" position="0 -0.3 0">
+            <a-entity mixin="arm" position="-0.3 -0.25 0" rotation="0 0 -10"></a-entity>
+            <a-entity mixin="arm" position="0.3 -0.25 0" rotation="0 0 10"></a-entity>
           </a-entity>
         </script>
         <script id="bob-animation" type="text/html-template">
@@ -85,8 +85,8 @@
                 rotation="0 180 0" firebase-broadcast="components: position, rotation">
         <a-entity id="head" mixin="avatar"
                   camera look-controls wasd-controls
-                  firebase-broadcast="components: mixin, position, rotation"
-                  raise-the-roof>
+                  firebase-broadcast="components: mixin, position, raise-the-roof, rotation"
+                  raise-the-roof="false">
         </a-entity>
       </a-entity>
 
