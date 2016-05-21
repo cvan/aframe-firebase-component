@@ -49,26 +49,28 @@
           {% endfor %}
         </script>
         <script id="face" type="text/html-template">
-          <a-entity geometry="primitive: circle; radius: 0.08"
-                    material="shader: flat; side: double"
-                    position="-0.1 0.1 0.18">
-            <a-entity geometry="primitive: circle; radius: 0.02"
-                      material="color: #222; shader: flat; side: double"
-                      position="0 0 0.03"></a-entity>
-          </a-entity>
-          <a-entity geometry="primitive: circle; radius: 0.08"
-                    material="shader: flat; side: double"
-                    position="0.1 0.1 0.18">
-            <a-entity geometry="primitive: circle; radius: 0.02"
-                      material="color: #222; shader: flat; side: double"
-                      position="0 0 0.03"></a-entity>
+          <a-entity rotation="0 180 0">
+            <a-entity geometry="primitive: circle; radius: 0.08"
+                      material="shader: flat; side: double"
+                      position="-0.1 0.1 0.18">
+              <a-entity geometry="primitive: circle; radius: 0.02"
+                        material="color: #222; shader: flat; side: double"
+                        position="0 0 0.03"></a-entity>
+            </a-entity>
+            <a-entity geometry="primitive: circle; radius: 0.08"
+                      material="shader: flat; side: double"
+                      position="0.1 0.1 0.18">
+              <a-entity geometry="primitive: circle; radius: 0.02"
+                        material="color: #222; shader: flat; side: double"
+                        position="0 0 0.03"></a-entity>
+            </a-entity>
           </a-entity>
         </script>
       </a-assets>
 
       <!-- Avatar. -->
       <a-entity random-position-at="selector: .chair; offset: 0 1.4 0.2"
-                rotation="0 180 0" firebase-broadcast="components: rotation">
+                rotation="0 180 0" firebase-broadcast="components: position, rotation">
         <a-entity id="head" mixin="avatar-head"
                   camera look-controls wasd-controls
                   firebase-broadcast="components: mixin, position, rotation">
