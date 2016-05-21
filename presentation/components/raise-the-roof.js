@@ -6,16 +6,25 @@ AFRAME.registerComponent('raise-the-roof', {
 
   init: function () {
     var el = this.el;
+    if (!el.components['firebase-broadcast']) { return; }
     window.addEventListener('mousedown', function () {
+      el.setAttribute('raise-the-roof', true);
+    });
+    window.addEventListener('touchstart', function () {
       el.setAttribute('raise-the-roof', true);
     });
     window.addEventListener('mouseup', function () {
       el.setAttribute('raise-the-roof', false);
     });
+    window.addEventListener('touchend', function () {
+      el.setAttribute('raise-the-roof', false);
+    });
   },
 
   update: function () {
-    var arms = this.el.querySelector('.arms');
+    var el = this.el;
+
+    var arms = el.querySelector('.arms');
     if (!arms) { return; }
 
     if (this.data) {
