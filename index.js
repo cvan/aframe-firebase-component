@@ -13,6 +13,10 @@ AFRAME.registerSystem('firebase', {
     var config = sceneEl.getAttribute('firebase');
     var self = this;
 
+    if (!(config instanceof Object)) {
+      config = AFRAME.utils.styleParser.parse(config);
+    }
+
     this.firebase = firebase.initializeApp(config);
     this.database = firebase.database();
 
