@@ -98,3 +98,12 @@ Then register and use.
 require('aframe');
 require('aframe-firebase-component');
 ```
+
+#### FAQ
+
+*Why can't I see anyone else?*
+
+Try positioning everyone at a different start point. In
+`examples/presentation/components/`, there is a `random-position-at` component
+that starts everyone at a different position (more specifically at one of the
+chairs).
