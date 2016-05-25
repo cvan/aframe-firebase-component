@@ -13,6 +13,10 @@ AFRAME.registerComponent('random-position-at', {
     var data = this.data;
     var el = this.el;
 
+    if (window.location.hash.indexOf('presenter') !== -1) {
+      return;
+    }
+
     setTimeout(function () {
       var entities = el.sceneEl.querySelectorAll(data.selector);
       var entity = entities[Math.floor(Math.random() * entities.length)];
